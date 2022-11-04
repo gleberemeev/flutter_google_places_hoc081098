@@ -134,7 +134,7 @@ class _PlacesAutocompleteOverlayState extends PlacesAutocompleteState {
 
     final header = Column(children: <Widget>[
       Material(
-          color: theme.dialogBackgroundColor,
+          color: Colors.white,
           borderRadius: BorderRadius.only(
               topLeft: headerTopLeftBorderRadius,
               topRight: headerTopRightBorderRadius),
