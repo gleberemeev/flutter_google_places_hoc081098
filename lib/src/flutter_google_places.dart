@@ -58,6 +58,7 @@ class PlacesAutocompleteWidget extends StatefulWidget {
   /// or custom configuration
   final Client? httpClient;
 
+
   PlacesAutocompleteWidget(
       {Key? key,
       required this.apiKey,
@@ -320,12 +321,20 @@ class AppBarPlacesAutoCompleteTextField extends StatefulWidget {
   final InputDecoration? textDecoration;
   final TextStyle? textStyle;
   final Color? cursorColor;
+  Color focusColor;
+  Color borderColor;
+  final Color inputContainerColor;
+  final Widget? iconRight;
 
-  const AppBarPlacesAutoCompleteTextField({
+  AppBarPlacesAutoCompleteTextField({
     Key? key,
     required this.textDecoration,
     required this.textStyle,
     required this.cursorColor,
+    this.focusColor = Colors.grey,
+    this.borderColor = Colors.grey,
+    this.inputContainerColor = Colors.grey,
+    this.iconRight
   }) : super(key: key);
 
   @override
@@ -335,20 +344,55 @@ class AppBarPlacesAutoCompleteTextField extends StatefulWidget {
 
 class _AppBarPlacesAutoCompleteTextFieldState
     extends State<AppBarPlacesAutoCompleteTextField> {
+  FocusNode inputFocusNode = FocusNode();
+  bool isFocus = false;
+
+  @override
+  void initState() {
+    super.initState();
+    inputFocusNode.addListener(() {
+      setState(() {
+        isFocus = inputFocusNode.hasFocus;
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    inputFocusNode.dispose();
+    super.dispose();
+  }
+
+  void onIconClearPress(TextEditingController controller){
+    controller.text= '';
+  }
+
   @override
   Widget build(BuildContext context) {
     final state = PlacesAutocompleteWidget.of(context);
 
     return Container(
         alignment: Alignment.topLeft,
+        decoration: BoxDecoration(
+            border: Border.all(
+                width: 0.5, color: isFocus ? widget.focusColor : widget.borderColor),
+            color: widget.inputContainerColor,
+            borderRadius: BorderRadius.circular(5)
+        ),
         margin: const EdgeInsets.only(top: 2.0),
-        child: TextField(
-          controller: state._queryTextController,
-          autofocus: true,
-          style: widget.textStyle ?? _defaultStyle(),
-          decoration:
-              widget.textDecoration ?? _defaultDecoration(state.widget.hint),
-          cursorColor: widget.cursorColor,
+        child: Row(
+          children: [
+            Expanded(
+                child: TextField(
+              focusNode: inputFocusNode,
+              controller: state._queryTextController,
+              style: widget.textStyle ?? _defaultStyle(),
+              decoration: widget.textDecoration ??
+                  _defaultDecoration(state.widget.hint),
+              cursorColor: widget.cursorColor,
+            )),
+            if(isFocus) IconButton(onPressed: () => onIconClearPress(state._queryTextController), icon: widget.iconRight ?? const Icon(Icons.clear_sharp))
+          ],
         ));
   }
 
@@ -463,7 +507,6 @@ abstract class PlacesAutocompleteState extends State<PlacesAutocompleteWidget> {
               .map((v) => v.text)
               .debounceTime(
                   widget.debounce ?? const Duration(milliseconds: 300))
-              .where((s) => s.isNotEmpty)
               .distinct()
               .switchMap((s) => doSearch(s, places)),
         )
