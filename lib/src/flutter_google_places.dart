@@ -375,7 +375,7 @@ class _AppBarPlacesAutoCompleteTextFieldState
         alignment: Alignment.topLeft,
         decoration: BoxDecoration(
             border: Border.all(
-                width: 0.5, color: isFocus ? widget.focusColor : widget.borderColor),
+                width: 0.75, color: isFocus ? widget.focusColor : widget.borderColor),
             color: widget.inputContainerColor,
             borderRadius: BorderRadius.circular(5)
         ),
