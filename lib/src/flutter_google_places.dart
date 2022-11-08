@@ -58,7 +58,6 @@ class PlacesAutocompleteWidget extends StatefulWidget {
   /// or custom configuration
   final Client? httpClient;
 
-
   PlacesAutocompleteWidget(
       {Key? key,
       required this.apiKey,
@@ -282,9 +281,15 @@ class _Loader extends StatelessWidget {
 class PlacesAutocompleteResult extends StatelessWidget {
   final ValueChanged<Prediction> onTap;
   final Widget? logo;
+  final Widget? icon;
+  final TextStyle? textStyle;
 
   const PlacesAutocompleteResult(
-      {Key? key, required this.onTap, required this.logo})
+      {Key? key,
+      required this.onTap,
+      required this.logo,
+      this.icon,
+      this.textStyle})
       : super(key: key);
 
   @override
@@ -309,9 +314,10 @@ class PlacesAutocompleteResult extends StatelessWidget {
           );
         }
         return PredictionsListView(
-          predictions: response.predictions,
-          onTap: onTap,
-        );
+            predictions: response.predictions,
+            onTap: onTap,
+            icon: icon,
+            textStyle: textStyle);
       },
     );
   }
@@ -326,16 +332,16 @@ class AppBarPlacesAutoCompleteTextField extends StatefulWidget {
   final Color inputContainerColor;
   final Widget? iconRight;
 
-  AppBarPlacesAutoCompleteTextField({
-    Key? key,
-    required this.textDecoration,
-    required this.textStyle,
-    required this.cursorColor,
-    this.focusColor = Colors.grey,
-    this.borderColor = Colors.grey,
-    this.inputContainerColor = Colors.grey,
-    this.iconRight
-  }) : super(key: key);
+  AppBarPlacesAutoCompleteTextField(
+      {Key? key,
+      required this.textDecoration,
+      required this.textStyle,
+      required this.cursorColor,
+      this.focusColor = Colors.grey,
+      this.borderColor = Colors.grey,
+      this.inputContainerColor = Colors.grey,
+      this.iconRight})
+      : super(key: key);
 
   @override
   _AppBarPlacesAutoCompleteTextFieldState createState() =>
@@ -363,37 +369,57 @@ class _AppBarPlacesAutoCompleteTextFieldState
     super.dispose();
   }
 
-  void onIconClearPress(TextEditingController controller){
-    controller.text= '';
+  void onIconClearPress(TextEditingController controller) {
+    controller.text = '';
+    inputFocusNode.requestFocus();
   }
 
   @override
   Widget build(BuildContext context) {
     final state = PlacesAutocompleteWidget.of(context);
 
-    return Container(
-        alignment: Alignment.topLeft,
-        decoration: BoxDecoration(
-            border: Border.all(
-                width: 0.75, color: isFocus ? widget.focusColor : widget.borderColor),
-            color: widget.inputContainerColor,
-            borderRadius: BorderRadius.circular(5)
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          child: InkWell(
+              onTap: () => Navigator.of(context).pop(),
+              child: const Icon(Icons.arrow_back_ios_rounded)),
         ),
-        margin: const EdgeInsets.only(top: 2.0),
-        child: Row(
-          children: [
-            Expanded(
-                child: TextField(
-              focusNode: inputFocusNode,
-              controller: state._queryTextController,
-              style: widget.textStyle ?? _defaultStyle(),
-              decoration: widget.textDecoration ??
-                  _defaultDecoration(state.widget.hint),
-              cursorColor: widget.cursorColor,
-            )),
-            if(isFocus) IconButton(onPressed: () => onIconClearPress(state._queryTextController), icon: widget.iconRight ?? const Icon(Icons.clear_sharp))
-          ],
-        ));
+        Expanded(
+          child: Container(
+              alignment: Alignment.topLeft,
+              decoration: BoxDecoration(
+                  border: Border.all(
+                      width: 0.75,
+                      color: isFocus ? widget.focusColor : widget.borderColor),
+                  color: widget.inputContainerColor,
+                  borderRadius: BorderRadius.circular(5)),
+              margin: const EdgeInsets.only(right: 26),
+              padding: const EdgeInsets.only(left: 8),
+              child: Row(
+                children: [
+                  Expanded(
+                      child: TextField(
+                    autofocus: true,
+                    focusNode: inputFocusNode,
+                    controller: state._queryTextController,
+                    style: widget.textStyle ?? _defaultStyle(),
+                    decoration: widget.textDecoration ??
+                        _defaultDecoration(state.widget.hint),
+                    cursorColor: widget.cursorColor,
+                  )),
+                  if (isFocus)
+                    IconButton(
+                        onPressed: () =>
+                            onIconClearPress(state._queryTextController),
+                        icon: widget.iconRight ?? const Icon(Icons.clear_sharp))
+                ],
+              )),
+        ),
+      ],
+    );
   }
 
   InputDecoration _defaultDecoration(String? hint) {
@@ -449,16 +475,23 @@ class PoweredByGoogleImage extends StatelessWidget {
 class PredictionsListView extends StatelessWidget {
   final List<Prediction> predictions;
   final ValueChanged<Prediction> onTap;
+  final Widget? icon;
+  final TextStyle? textStyle;
 
   const PredictionsListView(
-      {Key? key, required this.predictions, required this.onTap})
+      {Key? key,
+      required this.predictions,
+      required this.onTap,
+      this.icon,
+      this.textStyle})
       : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return ListView(
       children: predictions
-          .map((Prediction p) => PredictionTile(prediction: p, onTap: onTap))
+          .map((Prediction p) => PredictionTile(
+              prediction: p, onTap: onTap, icon: icon, textStyle: textStyle))
           .toList(growable: false),
     );
   }
@@ -467,17 +500,35 @@ class PredictionsListView extends StatelessWidget {
 class PredictionTile extends StatelessWidget {
   final Prediction prediction;
   final ValueChanged<Prediction> onTap;
+  final Widget? icon;
+  final TextStyle? textStyle;
 
   const PredictionTile(
-      {Key? key, required this.prediction, required this.onTap})
+      {Key? key,
+      required this.prediction,
+      required this.onTap,
+      this.icon,
+      this.textStyle})
       : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return ListTile(
-      leading: const Icon(Icons.location_on),
-      title: Text(prediction.description ?? ''),
+      leading: Padding(
+        padding: EdgeInsets.only(bottom: 24),
+        child: icon ?? const Icon(Icons.access_alarm),
+      ),
+      title: Container(
+        padding: EdgeInsets.only(bottom: 24),
+        child: Text(prediction.description ?? '', style: textStyle),
+        decoration: const BoxDecoration(
+            border: Border(
+                bottom: BorderSide(
+                    width: 1, color: Color.fromRGBO(221, 221, 221, 1)))),
+      ),
       onTap: () => onTap(prediction),
+      minLeadingWidth: 12,
+      contentPadding: EdgeInsets.fromLTRB(19, 10, 27, 0),
     );
   }
 }
