@@ -284,6 +284,7 @@ class _Loader extends StatelessWidget {
 }
 
 class PlacesAutocompleteResult extends StatelessWidget {
+  final bool? shouldShow;
   final ValueChanged<Prediction> onTap;
   final Widget? logo;
   final Widget? icon;
@@ -294,7 +295,8 @@ class PlacesAutocompleteResult extends StatelessWidget {
       required this.onTap,
       required this.logo,
       this.icon,
-      this.textStyle})
+      this.textStyle,
+      this.shouldShow = true})
       : super(key: key);
 
   @override
@@ -318,11 +320,13 @@ class PlacesAutocompleteResult extends StatelessWidget {
             ],
           );
         }
-        return PredictionsListView(
-            predictions: response.predictions,
-            onTap: onTap,
-            icon: icon,
-            textStyle: textStyle);
+        return shouldShow == true
+            ? PredictionsListView(
+                predictions: response.predictions,
+                onTap: onTap,
+                icon: icon,
+                textStyle: textStyle)
+            : Container();
       },
     );
   }
@@ -337,6 +341,8 @@ class AppBarPlacesAutoCompleteTextField extends StatefulWidget {
   final Color inputContainerColor;
   final Widget? iconRight;
   final Widget? iconLeft;
+  final PlacesAutoCompleteTextFieldController? addressController;
+  final Function(String value)? onChangeQueryText;
 
   AppBarPlacesAutoCompleteTextField(
       {Key? key,
@@ -347,18 +353,26 @@ class AppBarPlacesAutoCompleteTextField extends StatefulWidget {
       this.borderColor = Colors.grey,
       this.inputContainerColor = Colors.grey,
       this.iconRight,
-      this.iconLeft})
+      this.iconLeft,
+      this.addressController,
+      this.onChangeQueryText})
       : super(key: key);
 
   @override
   _AppBarPlacesAutoCompleteTextFieldState createState() =>
-      _AppBarPlacesAutoCompleteTextFieldState();
+      _AppBarPlacesAutoCompleteTextFieldState(addressController);
 }
 
 class _AppBarPlacesAutoCompleteTextFieldState
     extends State<AppBarPlacesAutoCompleteTextField> {
   FocusNode inputFocusNode = FocusNode();
   bool isFocus = false;
+
+  _AppBarPlacesAutoCompleteTextFieldState(
+      PlacesAutoCompleteTextFieldController? controller) {
+    controller?.setAddressText = setAddressText;
+    controller?.requestUnFocus = requestUnFocus;
+  }
 
   @override
   void initState() {
@@ -379,6 +393,15 @@ class _AppBarPlacesAutoCompleteTextFieldState
   void onIconClearPress(TextEditingController controller) {
     controller.text = '';
     inputFocusNode.requestFocus();
+  }
+
+  void setAddressText(String addressText) {
+    PlacesAutocompleteWidget.of(context)._queryTextController.text =
+        addressText;
+  }
+
+  void requestUnFocus(){
+    inputFocusNode.unfocus();
   }
 
   @override
@@ -410,6 +433,7 @@ class _AppBarPlacesAutoCompleteTextFieldState
                   if (widget.iconLeft != null) widget.iconLeft!,
                   Expanded(
                       child: TextField(
+                    onChanged: widget.onChangeQueryText,
                     autofocus: true,
                     focusNode: inputFocusNode,
                     controller: state._queryTextController,
@@ -816,4 +840,9 @@ abstract class PlacesAutocomplete {
     return Navigator.push<Prediction>(
         context, MaterialPageRoute(builder: builder));
   }
+}
+
+class PlacesAutoCompleteTextFieldController {
+  late void Function(String addressText) setAddressText;
+  late void Function() requestUnFocus;
 }
