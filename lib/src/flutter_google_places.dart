@@ -4,6 +4,7 @@ import 'dart:async';
 
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart' as GetX;
 import 'package:google_api_headers/google_api_headers.dart';
 import 'package:google_maps_webservice/places.dart';
 import 'package:http/http.dart';
@@ -117,7 +118,11 @@ class _PlacesAutocompleteScaffoldState extends PlacesAutocompleteState {
       onTap: Navigator.of(context).pop,
       logo: widget.logo,
     );
-    return Scaffold(appBar: appBar, body: body);
+    return Scaffold(
+      appBar: appBar,
+      body: body,
+      backgroundColor: Colors.green,
+    );
   }
 }
 
@@ -331,6 +336,7 @@ class AppBarPlacesAutoCompleteTextField extends StatefulWidget {
   Color borderColor;
   final Color inputContainerColor;
   final Widget? iconRight;
+  final Widget? iconLeft;
 
   AppBarPlacesAutoCompleteTextField(
       {Key? key,
@@ -340,7 +346,8 @@ class AppBarPlacesAutoCompleteTextField extends StatefulWidget {
       this.focusColor = Colors.grey,
       this.borderColor = Colors.grey,
       this.inputContainerColor = Colors.grey,
-      this.iconRight})
+      this.iconRight,
+      this.iconLeft})
       : super(key: key);
 
   @override
@@ -395,11 +402,12 @@ class _AppBarPlacesAutoCompleteTextFieldState
                       width: 0.75,
                       color: isFocus ? widget.focusColor : widget.borderColor),
                   color: widget.inputContainerColor,
-                  borderRadius: BorderRadius.circular(5)),
+                  borderRadius: BorderRadius.circular(30)),
               margin: const EdgeInsets.only(right: 26),
               padding: const EdgeInsets.only(left: 8),
               child: Row(
                 children: [
+                  if (widget.iconLeft != null) widget.iconLeft!,
                   Expanded(
                       child: TextField(
                     autofocus: true,
@@ -488,11 +496,31 @@ class PredictionsListView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListView(
-      children: predictions
-          .map((Prediction p) => PredictionTile(
-              prediction: p, onTap: onTap, icon: icon, textStyle: textStyle))
-          .toList(growable: false),
+    return Column(
+      children: [
+        Container(
+          color: Colors.transparent,
+          height: MediaQuery.of(context).padding.top - 10,
+        ),
+        Container(
+            height: 340,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.all(Radius.circular(10)),
+              color: Colors.white,
+            ),
+            // color: Colors.blue,
+            child: ListView(
+              physics: new ClampingScrollPhysics(),
+              padding: EdgeInsets.zero,
+              children: predictions
+                  .map((Prediction p) => PredictionTile(
+                      prediction: p,
+                      onTap: onTap,
+                      icon: icon,
+                      textStyle: textStyle))
+                  .toList(growable: false),
+            )),
+      ],
     );
   }
 }
@@ -513,22 +541,53 @@ class PredictionTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListTile(
-      leading: Padding(
-        padding: EdgeInsets.only(bottom: 24),
-        child: icon ?? const Icon(Icons.access_alarm),
+    return Container(
+      child: Container(
+        // child: ListTile(
+        //   leading: Padding(
+        //     padding: EdgeInsets.only(bottom: 24),
+        //     child: icon ?? const Icon(Icons.access_alarm),
+        //   ),
+        //   title: Container(
+        //     padding: EdgeInsets.only(bottom: 24),
+        //     child: Text(prediction.description ?? '', style: textStyle),
+        //     decoration: const BoxDecoration(
+        //         border: Border(
+        //             bottom: BorderSide(
+        //                 width: 1, color: Color.fromRGBO(221, 221, 221, 1)))),
+        //   ),
+        //   onTap: () => onTap(prediction),
+        //   minLeadingWidth: 12,
+        //   contentPadding: EdgeInsets.fromLTRB(19, 10, 27, 0),
+        // ),
+        child: InkWell(
+          onTap: () {
+            onTap(prediction);
+          },
+          child: Container(
+            height: 68,
+            margin: EdgeInsets.only(left: 20, right: 40),
+            decoration: BoxDecoration(
+                border: Border(
+                    bottom: BorderSide(
+                        width: 1, color: Color.fromRGBO(221, 221, 221, 1)))),
+            child: Row(
+              children: [
+                Padding(
+                  padding: EdgeInsets.only(bottom: 24, top: 10),
+                  child: icon ?? const Icon(Icons.access_alarm),
+                ),
+                Expanded(
+                  child: Container(
+                    margin: EdgeInsets.only(left: 12),
+                    child: Text(prediction.description ?? '', style: textStyle),
+                  ),
+                )
+              ],
+            ),
+          ),
+        ),
       ),
-      title: Container(
-        padding: EdgeInsets.only(bottom: 24),
-        child: Text(prediction.description ?? '', style: textStyle),
-        decoration: const BoxDecoration(
-            border: Border(
-                bottom: BorderSide(
-                    width: 1, color: Color.fromRGBO(221, 221, 221, 1)))),
-      ),
-      onTap: () => onTap(prediction),
-      minLeadingWidth: 12,
-      contentPadding: EdgeInsets.fromLTRB(19, 10, 27, 0),
     );
   }
 }
