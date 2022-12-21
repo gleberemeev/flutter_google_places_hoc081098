@@ -175,7 +175,7 @@ class _CustomSearchScaffoldState extends PlacesAutocompleteState {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const AppBarPlacesAutoCompleteTextField(
+        title: AppBarPlacesAutoCompleteTextField(
           textStyle: null,
           textDecoration: null,
           cursorColor: null,

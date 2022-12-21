@@ -1,9 +1,11 @@
 library flutter_google_places_hoc081098.src;
 
 import 'dart:async';
+import 'dart:developer';
 
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart' as GetX;
 import 'package:google_api_headers/google_api_headers.dart';
 import 'package:google_maps_webservice/places.dart';
@@ -289,6 +291,9 @@ class PlacesAutocompleteResult extends StatelessWidget {
   final Widget? logo;
   final Widget? icon;
   final TextStyle? textStyle;
+  final String? outOfAreaText;
+  final Widget? outOfAreaIcon;
+  final TextStyle? outOfAreaTextStyle;
 
   const PlacesAutocompleteResult(
       {Key? key,
@@ -296,7 +301,10 @@ class PlacesAutocompleteResult extends StatelessWidget {
       required this.logo,
       this.icon,
       this.textStyle,
-      this.shouldShow = true})
+      this.shouldShow = true,
+      this.outOfAreaText,
+      this.outOfAreaIcon,
+      this.outOfAreaTextStyle})
       : super(key: key);
 
   @override
@@ -310,6 +318,27 @@ class PlacesAutocompleteResult extends StatelessWidget {
         final state = snapshot.requireData;
         final response = state.response;
 
+        if (state.response?.status == 'ZERO_RESULTS') {
+          return Container(
+              margin: EdgeInsets.only(
+                  top: MediaQuery.of(context).padding.top, left: 10),
+              alignment: Alignment.centerLeft,
+              height: 50,
+              width: 388,
+              decoration: BoxDecoration(
+                  color: Colors.white, borderRadius: BorderRadius.circular(5)),
+              child: Row(
+                children: [
+                  if (outOfAreaIcon != null) outOfAreaIcon!,
+                  if (response?.predictions.isEmpty == true && response != null)
+                    Text(
+                        outOfAreaText ??
+                            "Looks like you’re out of our service area.",
+                        style: outOfAreaTextStyle ??
+                            TextStyle(fontWeight: FontWeight.bold))
+                ],
+              ));
+        }
         if (state.text.isEmpty ||
             response == null ||
             response.predictions.isEmpty) {
@@ -343,6 +372,7 @@ class AppBarPlacesAutoCompleteTextField extends StatefulWidget {
   final Widget? iconLeft;
   final PlacesAutoCompleteTextFieldController? addressController;
   final Function(String value)? onChangeQueryText;
+  final Function()? onClearText;
 
   AppBarPlacesAutoCompleteTextField(
       {Key? key,
@@ -355,7 +385,8 @@ class AppBarPlacesAutoCompleteTextField extends StatefulWidget {
       this.iconRight,
       this.iconLeft,
       this.addressController,
-      this.onChangeQueryText})
+      this.onChangeQueryText,
+      this.onClearText})
       : super(key: key);
 
   @override
@@ -400,7 +431,7 @@ class _AppBarPlacesAutoCompleteTextFieldState
         addressText;
   }
 
-  void requestUnFocus(){
+  void requestUnFocus() {
     inputFocusNode.unfocus();
   }
 
@@ -442,10 +473,15 @@ class _AppBarPlacesAutoCompleteTextFieldState
                         _defaultDecoration(state.widget.hint),
                     cursorColor: widget.cursorColor,
                   )),
+                  if (!isFocus) SizedBox(width: 14),
                   if (isFocus)
                     IconButton(
-                        onPressed: () =>
-                            onIconClearPress(state._queryTextController),
+                        onPressed: () {
+                          if (widget.onClearText != null) {
+                            widget.onClearText!();
+                          }
+                          onIconClearPress(state._queryTextController);
+                        },
                         icon: widget.iconRight ?? const Icon(Icons.clear_sharp))
                 ],
               )),
