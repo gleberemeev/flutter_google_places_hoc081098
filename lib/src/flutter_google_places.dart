@@ -322,7 +322,7 @@ class PlacesAutocompleteResult extends StatelessWidget {
         final state = snapshot.requireData;
         final response = state.response;
 
-        if (state.response?.status == 'ZERO_RESULTS' && shouldShow == true) {
+        if (state.response?.status == 'ZERO_RESULTS') {
           return Container(
               margin: EdgeInsets.only(
                   top: MediaQuery.of(context).padding.top, left: 10),
@@ -451,7 +451,10 @@ class _AppBarPlacesAutoCompleteTextFieldState
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12),
             child: InkWell(
-                onTap: () => Navigator.of(context).pop(),
+                onTap: (){
+                  FocusManager.instance.primaryFocus?.unfocus();
+                  Navigator.of(context).pop();
+                },
                 child: const Icon(Icons.arrow_back_ios_rounded)),
           ),
           Expanded(
