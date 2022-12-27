@@ -322,7 +322,7 @@ class PlacesAutocompleteResult extends StatelessWidget {
         final state = snapshot.requireData;
         final response = state.response;
 
-        if (state.response?.status == 'ZERO_RESULTS') {
+        if (state.response?.status == 'ZERO_RESULTS' && shouldShow == true) {
           return Container(
               margin: EdgeInsets.only(
                   top: MediaQuery.of(context).padding.top, left: 10),
