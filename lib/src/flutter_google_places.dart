@@ -2,6 +2,7 @@ library flutter_google_places_hoc081098.src;
 
 import 'dart:async';
 import 'dart:developer';
+import 'dart:io';
 
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
@@ -439,54 +440,57 @@ class _AppBarPlacesAutoCompleteTextFieldState
   Widget build(BuildContext context) {
     final state = PlacesAutocompleteWidget.of(context);
 
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12),
-          child: InkWell(
-              onTap: () => Navigator.of(context).pop(),
-              child: const Icon(Icons.arrow_back_ios_rounded)),
-        ),
-        Expanded(
-          child: Container(
-              alignment: Alignment.topLeft,
-              decoration: BoxDecoration(
-                  border: Border.all(
-                      width: 0.75,
-                      color: isFocus ? widget.focusColor : widget.borderColor),
-                  color: widget.inputContainerColor,
-                  borderRadius: BorderRadius.circular(30)),
-              margin: const EdgeInsets.only(right: 26),
-              padding: const EdgeInsets.only(left: 8),
-              child: Row(
-                children: [
-                  if (widget.iconLeft != null) widget.iconLeft!,
-                  Expanded(
-                      child: TextField(
-                    onChanged: widget.onChangeQueryText,
-                    autofocus: true,
-                    focusNode: inputFocusNode,
-                    controller: state._queryTextController,
-                    style: widget.textStyle ?? _defaultStyle(),
-                    decoration: widget.textDecoration ??
-                        _defaultDecoration(state.widget.hint),
-                    cursorColor: widget.cursorColor,
-                  )),
-                  if (!isFocus) SizedBox(width: 14),
-                  if (isFocus)
-                    IconButton(
-                        onPressed: () {
-                          if (widget.onClearText != null) {
-                            widget.onClearText!();
-                          }
-                          onIconClearPress(state._queryTextController);
-                        },
-                        icon: widget.iconRight ?? const Icon(Icons.clear_sharp))
-                ],
-              )),
-        ),
-      ],
+    return Container(
+      margin: EdgeInsets.only(top: Platform.isAndroid ? 20 : 0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: InkWell(
+                onTap: () => Navigator.of(context).pop(),
+                child: const Icon(Icons.arrow_back_ios_rounded)),
+          ),
+          Expanded(
+            child: Container(
+                alignment: Alignment.topLeft,
+                decoration: BoxDecoration(
+                    border: Border.all(
+                        width: 0.75,
+                        color: isFocus ? widget.focusColor : widget.borderColor),
+                    color: widget.inputContainerColor,
+                    borderRadius: BorderRadius.circular(30)),
+                margin: const EdgeInsets.only(right: 26),
+                padding: const EdgeInsets.only(left: 8),
+                child: Row(
+                  children: [
+                    if (widget.iconLeft != null) widget.iconLeft!,
+                    Expanded(
+                        child: TextField(
+                          onChanged: widget.onChangeQueryText,
+                          autofocus: true,
+                          focusNode: inputFocusNode,
+                          controller: state._queryTextController,
+                          style: widget.textStyle ?? _defaultStyle(),
+                          decoration: widget.textDecoration ??
+                              _defaultDecoration(state.widget.hint),
+                          cursorColor: widget.cursorColor,
+                        )),
+                    if (!isFocus) SizedBox(width: 14),
+                    if (isFocus)
+                      IconButton(
+                          onPressed: () {
+                            if (widget.onClearText != null) {
+                              widget.onClearText!();
+                            }
+                            onIconClearPress(state._queryTextController);
+                          },
+                          icon: widget.iconRight ?? const Icon(Icons.clear_sharp))
+                  ],
+                )),
+          ),
+        ],
+      ),
     );
   }
 
