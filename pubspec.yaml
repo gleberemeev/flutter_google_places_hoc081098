@@ -19,6 +19,7 @@ dependencies:
   listenable_stream: ^1.1.0
   collection: ^1.15.0
   get: ^4.3.8
+  geolocator: ^9.0.2
 
 dev_dependencies:
   flutter_test:

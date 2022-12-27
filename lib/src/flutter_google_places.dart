@@ -7,12 +7,15 @@ import 'dart:io';
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart' as GetX;
 import 'package:google_api_headers/google_api_headers.dart';
 import 'package:google_maps_webservice/places.dart';
 import 'package:http/http.dart';
 import 'package:listenable_stream/listenable_stream.dart';
 import 'package:rxdart_ext/state_stream.dart';
+
+import '../flutter_google_places_hoc081098.dart';
 
 class PlacesAutocompleteWidget extends StatefulWidget {
   final String? apiKey;
@@ -457,7 +460,8 @@ class _AppBarPlacesAutoCompleteTextFieldState
                 decoration: BoxDecoration(
                     border: Border.all(
                         width: 0.75,
-                        color: isFocus ? widget.focusColor : widget.borderColor),
+                        color:
+                            isFocus ? widget.focusColor : widget.borderColor),
                     color: widget.inputContainerColor,
                     borderRadius: BorderRadius.circular(30)),
                 margin: const EdgeInsets.only(right: 26),
@@ -467,15 +471,15 @@ class _AppBarPlacesAutoCompleteTextFieldState
                     if (widget.iconLeft != null) widget.iconLeft!,
                     Expanded(
                         child: TextField(
-                          onChanged: widget.onChangeQueryText,
-                          autofocus: true,
-                          focusNode: inputFocusNode,
-                          controller: state._queryTextController,
-                          style: widget.textStyle ?? _defaultStyle(),
-                          decoration: widget.textDecoration ??
-                              _defaultDecoration(state.widget.hint),
-                          cursorColor: widget.cursorColor,
-                        )),
+                      onChanged: widget.onChangeQueryText,
+                      autofocus: true,
+                      focusNode: inputFocusNode,
+                      controller: state._queryTextController,
+                      style: widget.textStyle ?? _defaultStyle(),
+                      decoration: widget.textDecoration ??
+                          _defaultDecoration(state.widget.hint),
+                      cursorColor: widget.cursorColor,
+                    )),
                     if (!isFocus) SizedBox(width: 14),
                     if (isFocus)
                       IconButton(
@@ -485,7 +489,8 @@ class _AppBarPlacesAutoCompleteTextFieldState
                             }
                             onIconClearPress(state._queryTextController);
                           },
-                          icon: widget.iconRight ?? const Icon(Icons.clear_sharp))
+                          icon:
+                              widget.iconRight ?? const Icon(Icons.clear_sharp))
                   ],
                 )),
           ),
@@ -589,6 +594,13 @@ class PredictionsListView extends StatelessWidget {
   }
 }
 
+class PredictionWithDistance {
+  Prediction prediction;
+  double distance;
+
+  PredictionWithDistance(this.prediction, this.distance);
+}
+
 class PredictionTile extends StatelessWidget {
   final Prediction prediction;
   final ValueChanged<Prediction> onTap;
@@ -607,49 +619,48 @@ class PredictionTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       child: Container(
-        // child: ListTile(
-        //   leading: Padding(
-        //     padding: EdgeInsets.only(bottom: 24),
-        //     child: icon ?? const Icon(Icons.access_alarm),
-        //   ),
-        //   title: Container(
-        //     padding: EdgeInsets.only(bottom: 24),
-        //     child: Text(prediction.description ?? '', style: textStyle),
-        //     decoration: const BoxDecoration(
-        //         border: Border(
-        //             bottom: BorderSide(
-        //                 width: 1, color: Color.fromRGBO(221, 221, 221, 1)))),
-        //   ),
-        //   onTap: () => onTap(prediction),
-        //   minLeadingWidth: 12,
-        //   contentPadding: EdgeInsets.fromLTRB(19, 10, 27, 0),
-        // ),
         child: InkWell(
           onTap: () {
             onTap(prediction);
           },
           child: Container(
-            height: 68,
-            margin: EdgeInsets.only(left: 20, right: 40),
-            decoration: BoxDecoration(
-                border: Border(
-                    bottom: BorderSide(
-                        width: 1, color: Color.fromRGBO(221, 221, 221, 1)))),
-            child: Row(
-              children: [
-                Padding(
-                  padding: EdgeInsets.only(bottom: 24, top: 10),
-                  child: icon ?? const Icon(Icons.access_alarm),
-                ),
-                Expanded(
-                  child: Container(
-                    margin: EdgeInsets.only(left: 12),
-                    child: Text(prediction.description ?? '', style: textStyle),
+              height: 68,
+              margin: EdgeInsets.only(left: 20, right: 40),
+              decoration: BoxDecoration(
+                  border: Border(
+                      bottom: BorderSide(
+                          width: 1, color: Color.fromRGBO(221, 221, 221, 1)))),
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      Padding(
+                        padding: EdgeInsets.only(bottom: 24, top: 20),
+                        child: icon ?? const Icon(Icons.access_alarm),
+                      ),
+                      Expanded(
+                          child: Container(
+                        margin: EdgeInsets.only(left: 12),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                                prediction.description?.split(", ").first ?? '',
+                                style: textStyle, maxLines: 1),
+                            Text(
+                              '${((prediction.distanceMeters ?? 0) * 0.001).toStringAsFixed(1)}km • ${prediction.description?.split(", ").sublist(1).join(', ').trim()}',
+                              style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                  color: Colors.grey),
+                            ),
+                          ],
+                        ),
+                      )),
+                    ],
                   ),
-                )
-              ],
-            ),
-          ),
+                ],
+              )),
         ),
       ),
     );
