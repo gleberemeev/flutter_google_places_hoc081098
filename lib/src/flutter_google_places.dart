@@ -638,24 +638,28 @@ class PredictionTile extends StatelessWidget {
                   Row(
                     children: [
                       Padding(
-                        padding: EdgeInsets.only(bottom: 24, top: 20),
+                        padding: EdgeInsets.only(bottom: 24, top: 15),
                         child: icon ?? const Icon(Icons.access_alarm),
                       ),
                       Expanded(
                           child: Container(
+                            padding: EdgeInsets.only(top: 10),
                         margin: EdgeInsets.only(left: 12),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
                                 prediction.description?.split(", ").first ?? '',
-                                style: textStyle, maxLines: 1),
+                                style: textStyle?.copyWith(fontSize: 13, fontWeight: FontWeight.w600), maxLines: 1),
+                            SizedBox(height: 4),
                             Text(
                               '${((prediction.distanceMeters ?? 0) * 0.001).toStringAsFixed(1)}km • ${prediction.description?.split(", ").sublist(1).join(', ').trim()}',
                               style: TextStyle(
-                                  fontSize: 14,
+                                  fontSize: 13,
                                   fontWeight: FontWeight.w500,
                                   color: Colors.grey),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ],
                         ),
