@@ -451,6 +451,8 @@ class _AppBarPlacesAutoCompleteTextFieldState
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12),
             child: InkWell(
+                splashColor: Colors.transparent,
+                highlightColor: Colors.transparent,
                 onTap: (){
                   FocusManager.instance.primaryFocus?.unfocus();
                   Navigator.of(context).pop();
