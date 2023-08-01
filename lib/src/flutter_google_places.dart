@@ -9,39 +9,134 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart' as GetX;
+import 'package:flutter_bloc_pattern/flutter_bloc_pattern.dart';
 import 'package:google_api_headers/google_api_headers.dart';
-import 'package:google_maps_webservice/places.dart';
 import 'package:http/http.dart';
 import 'package:listenable_stream/listenable_stream.dart';
+import 'package:rxdart_ext/single.dart';
 import 'package:rxdart_ext/state_stream.dart';
 
 import '../flutter_google_places_hoc081098.dart';
 
+import 'google_maps_webservice/places.dart';
+
 class PlacesAutocompleteWidget extends StatefulWidget {
+  /// The API key to use for the Places API.
   final String? apiKey;
+
+  /// The mode of the autocomplete widget.
   final Mode mode;
+
+  /// The hint text to show in the search field.
+  /// Default is 'Search'.
   final String? hint;
 
+  /// The initial text to show in the search field.
   final String? startText;
+
+  /// The BorderRadius used for the dialog in [Mode.overlay].
   final BorderRadius? overlayBorderRadius;
+
+  /// The point around which to retrieve place information.
+  /// The [radius] parameter must also be provided when specifying a location.
+  /// If [radius] is not provided, the location parameter is ignored.
+  ///
+  /// See [autocomplete docs](https://developers.google.com/maps/documentation/places/web-service/autocomplete#location).
   final Location? location;
+
+  /// The origin point from which to calculate straight-line distance
+  /// to the destination (returned as distance_meters).
+  /// If this value is omitted, straight-line distance will not be returned.
+  ///
+  /// See [autocomplete docs](https://developers.google.com/maps/documentation/places/web-service/autocomplete#origin).
   final Location? origin;
+
+  /// The position, in the input term, of the last character that the service uses to match predictions.
+  ///
+  /// For example, if the input is Google and the offset is 3, the service will match on Goo.
+  /// The string determined by the offset is matched against the first word in the input term only.
+  /// For example, if the input term is Google abc and the offset is 3,
+  /// the service will attempt to match against Goo abc.
+  ///
+  /// If no offset is supplied, the service will use the whole term.
+  /// The offset should generally be set to the position of the text caret.
+  ///
+  /// See [autocomplete docs](https://developers.google.com/maps/documentation/places/web-service/autocomplete#offset).
   final num? offset;
+
+  /// Defines the distance (in meters) within which to return place results.
+  /// You may bias results to a specified circle by passing a location and a radius parameter.
+  ///
+  /// Doing so instructs the Places service to prefer showing results within that circle;
+  /// results outside of the defined area may still be displayed.
+  ///
+  /// See [autocomplete docs](https://developers.google.com/maps/documentation/places/web-service/autocomplete#radius).
   final num? radius;
+
+  /// The language in which to return results.
+  ///
+  /// See [autocomplete docs](https://developers.google.com/places/web-service/autocomplete#language).
   final String? language;
+
+  /// A random string which identifies an autocomplete session for billing purposes.
+  ///
+  /// See [autocomplete docs](https://developers.google.com/maps/documentation/places/web-service/autocomplete#sessiontoken).
   final String? sessionToken;
+
+  /// You can restrict results from a Place Autocomplete request
+  /// to be of a certain type by passing the types parameter.
+  ///
+  /// This parameter specifies a type or a type collection, as listed in Place Types.
+  /// If nothing is specified, all types are returned.
+  ///
+  /// See [autocomplete docs](https://developers.google.com/maps/documentation/places/web-service/autocomplete#types).
   final List<String>? types;
+
+  /// A grouping of places to which you would like to restrict your results.
+  /// Currently, you can use components to filter by up to 5 countries.
+  /// Countries must be passed as a two character, ISO 3166-1 Alpha-2 compatible country code.
+  ///
+  /// See [autocomplete docs](https://developers.google.com/maps/documentation/places/web-service/autocomplete#components).
   final List<Component>? components;
+
+  /// Returns only those places that are strictly within the region defined by location and radius.
+  /// This is a restriction, rather than a bias, meaning that
+  /// results outside this region will not be returned even if they match the user input.
+  ///
+  /// See [autocomplete docs](https://developers.google.com/maps/documentation/places/web-service/autocomplete#strictbounds).
   final bool? strictbounds;
+
+  /// The region code, specified as a ccTLD ("top-level domain") two-character value.
+  /// Most ccTLD codes are identical to ISO 3166-1 codes, with some notable exceptions.
+  ///
+  /// See [autocomplete docs](https://developers.google.com/maps/documentation/places/web-service/autocomplete#region).
   final String? region;
+
+  /// The logo to display.
+  /// Default is the `powered by Google` logo.
   final Widget? logo;
+
+  /// The callback will be called when the autocomplete has an error.
   final ValueChanged<PlacesAutocompleteResponse>? onError;
+
+  /// The debounce time for the search query.
+  /// Default is 300ms.
   final Duration? debounce;
+
+  /// The additional HTTP headers to send with the request,
+  /// along with the headers from `google_api_headers`.
   final Map<String, String>? headers;
 
   /// This defines the space between the screen's edges and the dialog.
   /// This is only used in Mode.overlay.
   final EdgeInsets? insetPadding;
+
+  /// The back arrow icon in the leading of the appbar.
+  /// This is only used in [Mode.overlay].
+  ///
+  /// If not provided, the following icons will be used:
+  /// - [Icons.arrow_back_ios] will be used on iOS
+  /// - [Icons.arrow_back] on other platforms.
   final Widget? backArrowIcon;
 
   /// Decoration for search text field
@@ -50,6 +145,7 @@ class PlacesAutocompleteWidget extends StatefulWidget {
   /// Text style for search text field
   final TextStyle? textStyle;
 
+  /// The color of the cursor of the search text field.
   final Color? cursorColor;
 
   /// optional - sets 'proxy' value in google_maps_webservice
@@ -64,6 +160,9 @@ class PlacesAutocompleteWidget extends StatefulWidget {
   /// In case of using a proxy url that requires authentication
   /// or custom configuration
   final Client? httpClient;
+
+  /// Text style for each result's text.
+  final TextStyle? resultTextStyle;
 
   PlacesAutocompleteWidget(
       {Key? key,
@@ -92,7 +191,8 @@ class PlacesAutocompleteWidget extends StatefulWidget {
       this.headers,
       this.textDecoration,
       this.textStyle,
-      this.cursorColor})
+      this.cursorColor,
+      this.resultTextStyle})
       : super(key: key) {
     if (apiKey == null && proxyBaseUrl == null) {
       throw ArgumentError(
@@ -123,6 +223,7 @@ class _PlacesAutocompleteScaffoldState extends PlacesAutocompleteState {
     final body = PlacesAutocompleteResult(
       onTap: Navigator.of(context).pop,
       logo: widget.logo,
+      textStyle: widget.resultTextStyle,
     );
     return Scaffold(
       appBar: appBar,
@@ -186,11 +287,9 @@ class _PlacesAutocompleteOverlayState extends PlacesAutocompleteState {
           header,
           Padding(
             padding: const EdgeInsets.only(top: 48.0),
-            child: StreamBuilder<_SearchState>(
+            child: RxStreamBuilder<_SearchState>(
               stream: _state$,
-              initialData: _state$.value,
-              builder: (context, snapshot) {
-                final state = snapshot.requireData;
+              builder: (context, state) {
                 final response = state.response;
 
                 if (state.isSearching) {
@@ -223,6 +322,7 @@ class _PlacesAutocompleteOverlayState extends PlacesAutocompleteState {
                               (p) => PredictionTile(
                                 prediction: p,
                                 onTap: Navigator.of(context).pop,
+                                textStyle: widget.resultTextStyle,
                               ),
                             )
                             .toList(growable: false),
@@ -259,11 +359,12 @@ class _PlacesAutocompleteOverlayState extends PlacesAutocompleteState {
   Widget _textField(BuildContext context) => TextField(
         controller: _queryTextController,
         autofocus: true,
-        style: TextStyle(
-            color: Theme.of(context).brightness == Brightness.light
-                ? Colors.black87
-                : null,
-            fontSize: 16.0),
+        style: widget.textStyle ??
+            TextStyle(
+                color: Theme.of(context).brightness == Brightness.light
+                    ? Colors.black87
+                    : null,
+                fontSize: 16.0),
         decoration: InputDecoration(
           hintText: widget.hint,
           hintStyle: TextStyle(
@@ -315,11 +416,9 @@ class PlacesAutocompleteResult extends StatelessWidget {
   Widget build(BuildContext context) {
     final state = PlacesAutocompleteWidget.of(context);
 
-    return StreamBuilder<_SearchState>(
+    return RxStreamBuilder<_SearchState>(
       stream: state._state$,
-      initialData: state._state$.value,
-      builder: (context, snapshot) {
-        final state = snapshot.requireData;
+      builder: (context, state) {
         final response = state.response;
 
         if (state.response?.status == 'ZERO_RESULTS' && shouldShow == true) {
@@ -394,7 +493,7 @@ class AppBarPlacesAutoCompleteTextField extends StatefulWidget {
       : super(key: key);
 
   @override
-  _AppBarPlacesAutoCompleteTextFieldState createState() =>
+  State<AppBarPlacesAutoCompleteTextField> createState() =>
       _AppBarPlacesAutoCompleteTextFieldState(addressController);
 }
 
@@ -686,25 +785,25 @@ abstract class PlacesAutocompleteState extends State<PlacesAutocompleteWidget> {
           extentOffset: widget.startText?.length ?? 0,
         );
 
-  late final StateConnectableStream<_SearchState> _state$;
+  late final StateConnectableStream<_SearchState> _state$ =
+      Single.fromCallable(() => const GoogleApiHeaders().getHeaders())
+          .exhaustMap(createGoogleMapsPlaces)
+          .exhaustMap(
+            (places) => _queryTextController
+                .toValueStream(replayValue: true)
+                .map((v) => v.text)
+                .debounceTime(
+                    widget.debounce ?? const Duration(milliseconds: 300))
+                .distinct()
+                .switchMap((s) => _doSearch(s, places)),
+          )
+          .publishState(const _SearchState(false, null, ''));
+
   StreamSubscription<void>? _subscription;
 
   @override
   void initState() {
     super.initState();
-
-    _state$ = Rx.fromCallable(const GoogleApiHeaders().getHeaders)
-        .exhaustMap(createGoogleMapsPlaces)
-        .exhaustMap(
-          (places) => _queryTextController
-              .toValueStream(replayValue: true)
-              .map((v) => v.text)
-              .debounceTime(
-                  widget.debounce ?? const Duration(milliseconds: 300))
-              .distinct()
-              .switchMap((s) => doSearch(s, places)),
-        )
-        .publishState(const _SearchState(false, null, ''));
     _subscription = _state$.connect();
   }
 
@@ -736,12 +835,12 @@ abstract class PlacesAutocompleteState extends State<PlacesAutocompleteWidget> {
     );
   }
 
-  Stream<_SearchState> doSearch(String value, GoogleMapsPlaces places) async* {
+  Stream<_SearchState> _doSearch(String value, GoogleMapsPlaces places) async* {
     yield _SearchState(true, null, value);
 
     assert(() {
       debugPrint(
-          '[flutter_google_places_hoc081098] input=$value location=${widget.location} origin=${widget.origin}');
+          '''[flutter_google_places_hoc081098] input='$value', location=${widget.location}, origin=${widget.origin}''');
       return true;
     }());
 
@@ -836,6 +935,9 @@ class _SearchState {
 }
 
 abstract class PlacesAutocomplete {
+  PlacesAutocomplete._();
+
+  /// See [PlacesAutocompleteWidget] for more details about the various parameters.
   static Future<Prediction?> show(
       {required BuildContext context,
       required String? apiKey,
@@ -863,7 +965,8 @@ abstract class PlacesAutocomplete {
       TextStyle? textStyle,
       Color? cursorColor,
       EdgeInsets? insetPadding,
-      Widget? backArrowIcon}) {
+      Widget? backArrowIcon,
+      TextStyle? resultTextStyle}) {
     PlacesAutocompleteWidget builder(BuildContext context) =>
         PlacesAutocompleteWidget(
           apiKey: apiKey,
@@ -892,13 +995,16 @@ abstract class PlacesAutocomplete {
           cursorColor: cursorColor,
           insetPadding: insetPadding,
           backArrowIcon: backArrowIcon,
+          resultTextStyle: resultTextStyle,
         );
 
-    if (mode == Mode.overlay) {
-      return showDialog<Prediction>(context: context, builder: builder);
+    switch (mode) {
+      case Mode.overlay:
+        return showDialog<Prediction>(context: context, builder: builder);
+      case Mode.fullscreen:
+        return Navigator.push<Prediction>(
+            context, MaterialPageRoute(builder: builder));
     }
-    return Navigator.push<Prediction>(
-        context, MaterialPageRoute(builder: builder));
   }
 }
 
