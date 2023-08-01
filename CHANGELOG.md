@@ -1,5 +1,26 @@
 # flutter_google_places_hoc081098 changelog
 
+## 2.0.0-beta.0 - Jun 27, 2023
+
+- Requires `Dart 3.0` or later.
+
+- Requires `Flutter 3.10.0` or later.
+
+- Update dependencies
+  - `google_api_headers: ^2.0.0`.
+  - `http: ^1.0.0`.
+  - `rxdart: ^0.27.7`.
+  - `rxdart_ext: ^0.2.9`.
+  - `collection: ^1.17.1`.
+
+- Remove `google_maps_webservice` dependency.
+
+## 1.2.0 - Feb 5, 2023
+
+- Add `resultTextStyle`: used to change the style of `Text` of result.
+- Add `overlayBorderRadius`, `textStyle`, `textStyleFormField` to `PlacesAutocompleteField` and `PlacesAutocompleteFormField`.
+- Various docs improvements.
+
 ## 1.1.0 - Jun 20, 2022
 
 - Update dependencies

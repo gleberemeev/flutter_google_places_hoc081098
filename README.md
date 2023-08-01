@@ -11,6 +11,10 @@ Google places autocomplete widgets for flutter.
 [![Hits](https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https%3A%2F%2Fgithub.com%2Fhoc081098%2Fflutter_google_places&count_bg=%2379C83D&title_bg=%23555555&icon=&icon_color=%23E7E7E7&title=hits&edge_flat=false)](https://hits.seeyoufarm.com)
 [![Build example](https://github.com/hoc081098/flutter_google_places/actions/workflows/build-example.yml/badge.svg?branch=main)](https://github.com/hoc081098/flutter_google_places/actions/workflows/build-example.yml)
 
+Liked some of my work? Buy me a coffee (or more likely a beer). Thanks for your support :heart:
+
+<a href="https://www.buymeacoffee.com/hoc081098" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-blue.png" alt="Buy Me A Coffee" height=64></a>
+
 - Migrated to **null-safety**.
 - Updated dependencies to latest release.
 - Refactoring by using **RxDart** for more power.
@@ -39,6 +43,9 @@ dependencies:
 </div>
 
 ## Simple usage
+
+
+According to https://stackoverflow.com/a/52545293, you need to enable billing on your account, even if you are only using the free quota.
 
 ```dart
 // replace flutter_google_places by flutter_google_places_hoc081098
