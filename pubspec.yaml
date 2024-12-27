@@ -20,16 +20,15 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  google_api_headers: ^2.0.2
+  google_api_headers: ^4.2.6
   http: ^1.0.0
-  rxdart: ^0.27.7
-  rxdart_ext: ^0.2.9
-  listenable_stream: ^1.1.0
+  rxdart: ^0.28.0
+  rxdart_ext: ^0.3.0
+  listenable_stream: ^2.0.1
   collection: ^1.17.1
-  flutter_bloc_pattern: ^2.3.0
+  flutter_bloc_pattern: ^3.0.0
   json_annotation: any
   meta: ^1.9.1
-  get: ^4.6.6
   geolocator: ^9.0.2
 
 dev_dependencies:
