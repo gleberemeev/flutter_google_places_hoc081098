@@ -4,6 +4,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:collection/collection.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc_pattern/flutter_bloc_pattern.dart';
 import 'package:google_api_headers/google_api_headers.dart';
@@ -499,7 +500,7 @@ class _AppBarPlacesAutoCompleteTextFieldState extends State<AppBarPlacesAutoComp
     final state = PlacesAutocompleteWidget.of(context);
 
     return Container(
-      margin: EdgeInsets.only(top: Platform.isAndroid ? 20 : 0),
+      margin: EdgeInsets.only(top: !kIsWeb && Platform.isAndroid ? 20 : 0),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
