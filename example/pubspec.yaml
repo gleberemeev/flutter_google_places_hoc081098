@@ -13,7 +13,7 @@ dependencies:
   flutter_google_places_hoc081098:
     path: ../
   google_api_headers: ^4.2.6
-  uuid: ^3.0.7
+  uuid: ^4.5.1
 
 dev_dependencies:
   flutter_lints: ^1.0.4
