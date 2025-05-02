@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'google_maps_webservice/places.dart';
+import 'package:flutter_google_places_sdk/flutter_google_places_sdk.dart';
 
 import 'flutter_google_places.dart';
 import 'places_autocomplete_field.dart';
@@ -43,8 +43,11 @@ class PlacesAutocompleteFormField extends FormField<String> {
   /// For documentation about the various parameters, see the [PlacesAutocompleteField] class
   /// and [PlacesAutocompleteField], the constructor.
   PlacesAutocompleteFormField({
-    Key? key,
-    required String? apiKey,
+    super.key,
+    required String apiKey,
+    required List<PlaceTypeFilter> types,
+    required LatLng origin,
+    required List<String> countries,
     this.controller,
     Icon? leading,
     String? initialValue,
@@ -52,60 +55,38 @@ class PlacesAutocompleteFormField extends FormField<String> {
     Icon? trailing,
     VoidCallback? trailingOnTap,
     Mode mode = Mode.fullscreen,
-    num? offset,
-    Location? location,
-    num? radius,
-    String? language,
-    String? sessionToken,
-    List<String>? types,
-    List<Component>? components,
-    bool? strictbounds,
-    ValueChanged<PlacesAutocompleteResponse>? onError,
+    ValueChanged<Object>? onError,
     InputDecoration? inputDecoration = const InputDecoration(),
-    AutovalidateMode autovalidateMode = AutovalidateMode.disabled,
-    FormFieldSetter<String>? onSaved,
-    FormFieldValidator<String>? validator,
-    Map<String, String>? headers,
+    AutovalidateMode super.autovalidateMode = AutovalidateMode.disabled,
+    super.onSaved,
+    super.validator,
     BorderRadius? overlayBorderRadius,
     TextStyle? textStyle,
     TextStyle? textStyleFormField,
   })  : assert(initialValue == null || controller == null),
         super(
-          key: key,
-          initialValue:
-              controller != null ? controller.text : (initialValue ?? ''),
-          onSaved: onSaved,
-          validator: validator,
-          autovalidateMode: autovalidateMode,
+          initialValue: controller != null ? controller.text : (initialValue ?? ''),
           builder: (FormFieldState<String> field) {
             final state = field as _TextFormFieldState;
-            final effectiveDecoration = inputDecoration
-                ?.applyDefaults(Theme.of(state.context).inputDecorationTheme);
+            final effectiveDecoration = inputDecoration?.applyDefaults(Theme.of(state.context).inputDecorationTheme);
             return PlacesAutocompleteField(
               key: key,
-              inputDecoration:
-                  effectiveDecoration?.copyWith(errorText: state.errorText),
+              inputDecoration: effectiveDecoration?.copyWith(errorText: state.errorText),
               controller: state._effectiveController,
               apiKey: apiKey,
               leading: leading,
               trailing: trailing,
-              offset: offset,
               trailingOnTap: trailingOnTap,
               hint: hint,
-              location: location,
-              radius: radius,
-              components: components,
-              language: language,
-              sessionToken: sessionToken,
               types: types,
               mode: mode,
-              strictbounds: strictbounds,
               onChanged: state.didChange,
               onError: onError,
-              headers: headers,
               overlayBorderRadius: overlayBorderRadius,
               textStyle: textStyle,
               textStyleFormField: textStyleFormField,
+              origin: origin,
+              countries: countries,
             );
           },
         );
@@ -123,12 +104,10 @@ class PlacesAutocompleteFormField extends FormField<String> {
 class _TextFormFieldState extends FormFieldState<String> {
   TextEditingController? _controller;
 
-  TextEditingController get _effectiveController =>
-      widget.controller ?? _controller!;
+  TextEditingController get _effectiveController => widget.controller ?? _controller!;
 
   @override
-  PlacesAutocompleteFormField get widget =>
-      super.widget as PlacesAutocompleteFormField;
+  PlacesAutocompleteFormField get widget => super.widget as PlacesAutocompleteFormField;
 
   @override
   void initState() {
@@ -148,8 +127,7 @@ class _TextFormFieldState extends FormFieldState<String> {
       widget.controller?.addListener(_handleControllerChanged);
 
       if (oldWidget.controller != null && widget.controller == null) {
-        _controller =
-            TextEditingController.fromValue(oldWidget.controller!.value);
+        _controller = TextEditingController.fromValue(oldWidget.controller!.value);
       }
       if (widget.controller != null) {
         setValue(widget.controller!.text);

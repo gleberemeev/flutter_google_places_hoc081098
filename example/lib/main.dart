@@ -2,11 +2,9 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_google_places_hoc081098/flutter_google_places_hoc081098.dart';
-import 'package:flutter_google_places_hoc081098/google_maps_webservice_places.dart';
-import 'package:google_api_headers/google_api_headers.dart';
-import 'package:uuid/uuid.dart';
+import 'package:flutter_google_places_sdk/flutter_google_places_sdk.dart';
 
-const kGoogleApiKey = 'API_KEY';
+const kGoogleApiKey = 'AIzaSyAX35jFUW-ElHGkDfDwPO_Q8QQNbH2u64I';
 
 void main() => runApp(const RoutesWidget());
 
@@ -107,10 +105,10 @@ class _MyAppState extends State<MyApp> {
   }
 
   Future<void> _handlePressButton() async {
-    void onError(PlacesAutocompleteResponse response) {
+    void onError(object) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(response.errorMessage ?? 'Unknown error'),
+        const SnackBar(
+          content: Text('Unknown error'),
         ),
       );
     }
@@ -122,35 +120,32 @@ class _MyAppState extends State<MyApp> {
       apiKey: kGoogleApiKey,
       onError: onError,
       mode: _mode,
-      language: 'fr',
-      components: [const Component(Component.country, 'fr')],
+      countries: ['th'],
       resultTextStyle: Theme.of(context).textTheme.titleMedium,
+      origin: const LatLng(lat: 13.7563, lng: 100.5018),
+      types: [PlaceTypeFilter.ESTABLISHMENT],
     );
 
     await displayPrediction(p, ScaffoldMessenger.of(context));
   }
 }
 
-Future<void> displayPrediction(
-    Prediction? p, ScaffoldMessengerState messengerState) async {
+Future<void> displayPrediction(AutocompletePrediction? p, ScaffoldMessengerState messengerState) async {
   if (p == null) {
     return;
   }
 
   // get detail (lat/lng)
-  final _places = GoogleMapsPlaces(
-    apiKey: kGoogleApiKey,
-    apiHeaders: await const GoogleApiHeaders().getHeaders(),
-  );
+  final _places = FlutterGooglePlacesSdk(kGoogleApiKey);
 
-  final detail = await _places.getDetailsByPlaceId(p.placeId!);
-  final geometry = detail.result.geometry!;
-  final lat = geometry.location.lat;
-  final lng = geometry.location.lng;
+  final detail = await _places.fetchPlace(p.placeId, fields: [PlaceField.Location]);
+  final geometry = detail.place?.latLng;
+  final lat = geometry?.lat;
+  final lng = geometry?.lng;
 
   messengerState.showSnackBar(
     SnackBar(
-      content: Text('${p.description} - $lat/$lng'),
+      content: Text('${p.primaryText} - $lat/$lng'),
     ),
   );
 }
@@ -160,13 +155,7 @@ Future<void> displayPrediction(
 // and your state [GooglePlacesAutocompleteState]
 class CustomSearchScaffold extends PlacesAutocompleteWidget {
   CustomSearchScaffold({Key? key})
-      : super(
-          key: key,
-          apiKey: kGoogleApiKey,
-          sessionToken: const Uuid().v4(),
-          language: 'en',
-          components: [Component(Component.country, 'uk')],
-        );
+      : super(key: key, apiKey: kGoogleApiKey, types: [PlaceTypeFilter.ESTABLISHMENT], countries: ['th']);
 
   @override
   _CustomSearchScaffoldState createState() => _CustomSearchScaffoldState();
@@ -177,7 +166,7 @@ class _CustomSearchScaffoldState extends PlacesAutocompleteState {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: AppBarPlacesAutoCompleteTextField(
+        title: const AppBarPlacesAutoCompleteTextField(
           textStyle: null,
           textDecoration: null,
           cursorColor: null,
@@ -185,28 +174,28 @@ class _CustomSearchScaffoldState extends PlacesAutocompleteState {
       ),
       body: PlacesAutocompleteResult(
         onTap: (p) => displayPrediction(p, ScaffoldMessenger.of(context)),
-        logo: Row(
+        logo: const Row(
           mainAxisAlignment: MainAxisAlignment.center,
-          children: const [FlutterLogo()],
+          children: [FlutterLogo()],
         ),
       ),
     );
   }
 
   @override
-  void onResponseError(PlacesAutocompleteResponse response) {
+  void onResponseError(List<AutocompletePrediction> response) {
     super.onResponseError(response);
 
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(response.errorMessage ?? 'Unknown error')),
+      const SnackBar(content: Text('Unknown error')),
     );
   }
 
   @override
-  void onResponse(PlacesAutocompleteResponse response) {
+  void onResponse(List<AutocompletePrediction> response) {
     super.onResponse(response);
 
-    if (response.predictions.isNotEmpty) {
+    if (response.isNotEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Got answer')),
       );

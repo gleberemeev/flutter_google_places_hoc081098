@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'google_maps_webservice/places.dart';
+import 'package:flutter_google_places_sdk/flutter_google_places_sdk.dart';
 
 import 'flutter_google_places.dart';
 
@@ -37,31 +37,25 @@ class PlacesAutocompleteField extends StatefulWidget {
   /// by the decoration to save space for the labels), set the [decoration] to
   /// null.
   const PlacesAutocompleteField({
-    Key? key,
+    super.key,
     required this.apiKey,
+    required this.types,
+    required this.origin,
+    required this.countries,
     this.controller,
     this.leading,
     this.hint = 'Search',
     this.trailing,
     this.trailingOnTap,
     this.mode = Mode.fullscreen,
-    this.offset,
-    this.location,
-    this.radius,
-    this.language,
-    this.sessionToken,
-    this.types,
-    this.components,
-    this.strictbounds,
     this.onChanged,
     this.onSelected,
     this.onError,
     this.inputDecoration = const InputDecoration(),
-    this.headers,
     this.overlayBorderRadius,
     this.textStyle,
     this.textStyleFormField,
-  }) : super(key: key);
+  });
 
   /// Controls the text being edited.
   ///
@@ -88,7 +82,9 @@ class PlacesAutocompleteField extends StatefulWidget {
   /// See also:
   ///
   /// * <https://developers.google.com/places/web-service/autocomplete>
-  final String? apiKey;
+  final String apiKey;
+
+  final LatLng origin;
 
   /// The decoration to show around the text field.
   ///
@@ -99,46 +95,20 @@ class PlacesAutocompleteField extends StatefulWidget {
   /// extra padding introduced by the decoration to save space for the labels).
   final InputDecoration? inputDecoration;
 
-  /// The position, in the input term, of the last character that the service
-  /// uses to match predictions.
-  ///
-  /// For example, if the input is 'Google' and the
-  /// offset is 3, the service will match on 'Goo'. The string determined by the
-  /// offset is matched against the first word in the input term only. For
-  /// example, if the input term is 'Google abc' and the offset is 3, the service
-  /// will attempt to match against 'Goo abc'. If no offset is supplied, the
-  /// service will use the whole term. The offset should generally be set to the
-  /// position of the text caret.
-  ///
-  /// Source: https://developers.google.com/places/web-service/autocomplete
-  final num? offset;
-
   final Mode mode;
 
-  final String? language;
+  final List<String> countries;
 
-  final String? sessionToken;
-
-  final List<String>? types;
-
-  final List<Component>? components;
-
-  final Location? location;
-
-  final num? radius;
-
-  final bool? strictbounds;
+  final List<PlaceTypeFilter> types;
 
   /// Called when the text being edited changes.
   final ValueChanged<String>? onChanged;
 
   /// Called when an autocomplete entry is selected.
-  final ValueChanged<Prediction>? onSelected;
+  final ValueChanged<AutocompletePrediction>? onSelected;
 
   /// Callback when autocomplete has error.
-  final ValueChanged<PlacesAutocompleteResponse>? onError;
-
-  final Map<String, String>? headers;
+  final ValueChanged<Object>? onError;
 
   final BorderRadius? overlayBorderRadius;
 
@@ -147,15 +117,13 @@ class PlacesAutocompleteField extends StatefulWidget {
   final TextStyle? textStyleFormField;
 
   @override
-  State<PlacesAutocompleteField> createState() =>
-      _LocationAutocompleteFieldState();
+  State<PlacesAutocompleteField> createState() => _LocationAutocompleteFieldState();
 }
 
 class _LocationAutocompleteFieldState extends State<PlacesAutocompleteField> {
   TextEditingController? _controller;
 
-  TextEditingController get _effectiveController =>
-      widget.controller ?? _controller!;
+  TextEditingController get _effectiveController => widget.controller ?? _controller!;
 
   @override
   void initState() {
@@ -170,30 +138,23 @@ class _LocationAutocompleteFieldState extends State<PlacesAutocompleteField> {
       widget.controller!.text = oldWidget.controller!.text;
     }
     if (widget.controller == null && oldWidget.controller != null) {
-      _controller =
-          TextEditingController.fromValue(oldWidget.controller!.value);
+      _controller = TextEditingController.fromValue(oldWidget.controller!.value);
     } else if (widget.controller != null && oldWidget.controller == null) {
       _controller = null;
     }
   }
 
-  Future<Prediction?> _showAutocomplete() async => PlacesAutocomplete.show(
+  Future<AutocompletePrediction?> _showAutocomplete() async => PlacesAutocomplete.show(
         context: context,
         apiKey: widget.apiKey,
-        offset: widget.offset,
         onError: widget.onError,
         mode: widget.mode,
+        countries: widget.countries,
         hint: widget.hint,
-        language: widget.language,
-        sessionToken: widget.sessionToken,
-        components: widget.components,
-        location: widget.location,
-        radius: widget.radius,
         types: widget.types,
-        strictbounds: widget.strictbounds,
-        headers: widget.headers,
         overlayBorderRadius: widget.overlayBorderRadius,
         textStyle: widget.textStyle,
+        origin: widget.origin,
       );
 
   void _handleTap() async {
@@ -202,9 +163,9 @@ class _LocationAutocompleteFieldState extends State<PlacesAutocompleteField> {
     if (p == null) return;
 
     setState(() {
-      _effectiveController.text = p.description ?? '';
+      _effectiveController.text = p.primaryText ?? '';
       if (widget.onChanged != null) {
-        widget.onChanged!(p.description ?? '');
+        widget.onChanged!(p.primaryText ?? '');
       }
       if (widget.onSelected != null) {
         widget.onSelected!(p);
@@ -220,13 +181,11 @@ class _LocationAutocompleteFieldState extends State<PlacesAutocompleteField> {
         ? Text(
             controller.text,
             softWrap: true,
-            style: widget.textStyleFormField ??
-                const TextStyle(color: Colors.black38),
+            style: widget.textStyleFormField ?? const TextStyle(color: Colors.black38),
           )
         : Text(
             widget.hint ?? '',
-            style: widget.textStyleFormField ??
-                const TextStyle(color: Colors.black38),
+            style: widget.textStyleFormField ?? const TextStyle(color: Colors.black38),
           );
 
     Widget child = Row(

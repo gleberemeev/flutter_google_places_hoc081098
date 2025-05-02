@@ -110,7 +110,7 @@ packages:
     source: path
     version: "2.0.0-beta.0"
   flutter_google_places_sdk:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: flutter_google_places_sdk
       sha256: "707d9729960bb50fb38fbaa407ad78fa9fd31e4faac1e319d5e8cc3c3c7db584"

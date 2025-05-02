@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_google_places_hoc081098/flutter_google_places_hoc081098.dart';
 import 'package:flutter_google_places_hoc081098/google_maps_webservice_places.dart';
-import 'package:uuid/uuid.dart';
+import 'package:flutter_google_places_sdk/flutter_google_places_sdk.dart';
 
 import 'main.dart';
 
@@ -13,9 +13,8 @@ class CustomSearchScaffold extends PlacesAutocompleteWidget {
       : super(
           key: key,
           apiKey: kGoogleApiKey,
-          sessionToken: const Uuid().v4(),
-          language: 'en',
-          components: [const Component(Component.country, 'uk')],
+          countries: ['th'],
+          types: [PlaceTypeFilter.ESTABLISHMENT],
         );
 
   @override
@@ -45,19 +44,19 @@ class _CustomSearchScaffoldState extends PlacesAutocompleteState {
   }
 
   @override
-  void onResponseError(PlacesAutocompleteResponse response) {
+  void onResponseError(List<AutocompletePrediction> response) {
     super.onResponseError(response);
 
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(response.errorMessage ?? 'Unknown error')),
+      const SnackBar(content: Text('Unknown error')),
     );
   }
 
   @override
-  void onResponse(PlacesAutocompleteResponse response) {
+  void onResponse(List<AutocompletePrediction> response) {
     super.onResponse(response);
 
-    if (response.predictions.isNotEmpty) {
+    if (response.isNotEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Got answer')),
       );
